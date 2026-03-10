@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shed Layout Planner</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:#1a1a18;color:#f0ede8;min-height:100vh;display:flex;flex-direction:column}
+  header{padding:12px 20px;border-bottom:1px solid #2a2a26;display:flex;align-items:center;gap:12px;background:#111;flex-wrap:wrap}
+  header h1{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#c85c2e}
+  header p{font-size:11px;color:#555}
+  .badge{font-size:9px;font-family:'Space Mono',monospace;padding:2px 7px;border-radius:10px}
+  .b1{background:#3a6b5c;color:#d0ede8}.b2{background:#6b3a1a;color:#f0d0b8}
+  .main{display:flex;flex:1}
+  .sidebar{width:248px;background:#141412;border-right:1px solid #252520;padding:12px 10px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex-shrink:0}
+  .sidebar h2{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;color:#444;margin-bottom:5px;border-bottom:1px solid #202018;padding-bottom:3px}
+  .opt-btn{display:block;width:100%;padding:7px 10px;border:1.5px solid #2a2a26;border-radius:5px;background:#1a1a16;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;color:#888;cursor:pointer;text-align:left;transition:all .13s;margin-bottom:5px}
+  .opt-btn:hover{border-color:#c85c2e;background:#1c0a04}
+  .opt-btn.active{border-color:#c85c2e;background:#1e0e06;color:#e87a50}
+  .opt-btn span{display:block;font-size:10px;font-weight:400;color:#444;margin-top:2px;line-height:1.4}
+  .tog-row{display:flex;gap:5px}
+  .tog{flex:1;padding:7px 4px;border:1.5px solid #2a2a26;border-radius:4px;background:#1a1a16;font-size:9px;font-weight:700;font-family:'Space Mono',monospace;cursor:pointer;text-align:center;color:#444;transition:all .13s;line-height:1.4}
+  .tog.on-green{border-color:#3a6b5c!important;background:#0e1e18!important;color:#6abda8!important}
+  .tog.on-orange{border-color:#c85c2e!important;background:#1e0e06!important;color:#e87a50!important}
+  .dims-table{font-size:10px;width:100%;border-collapse:collapse}
+  .dims-table td{padding:2px 3px;border-bottom:1px solid #1e1e1a;color:#555}
+  .dims-table td:first-child{font-weight:500;color:#999}
+  .dims-table td:last-child{text-align:right;font-family:'Space Mono',monospace;font-size:9px;color:#c85c2e}
+  .info{border-radius:4px;padding:7px 9px;font-size:10px;line-height:1.65}
+  .ig{background:#0e1812;border:1px solid #1e3028;border-left:3px solid #3a6b5c;color:#777}
+  .ig strong{color:#5ab0a0}
+  .legend-item{display:flex;align-items:center;gap:7px;font-size:10px;margin-bottom:4px;color:#777}
+  .sw{width:14px;height:9px;border-radius:2px;border:1px solid rgba(255,255,255,.06);flex-shrink:0}
+  .canvas-wrap{flex:1;display:flex;flex-direction:column;align-items:center;padding:16px 12px;gap:11px;overflow:auto;background:#1a1a18}
+  .ctitle{font-family:'Space Mono',monospace;font-size:10px;color:#c85c2e;letter-spacing:.07em;text-align:center}
+  canvas{background:#ede9e0;border:1px solid #333;box-shadow:0 4px 28px rgba(0,0,0,.6);border-radius:3px}
+  .notes{max-width:780px;width:100%;background:#141412;border:1px solid #222;border-left:3px solid #3a6b5c;border-radius:4px;padding:12px 15px;font-size:11px;line-height:1.8;color:#999}
+  .notes h3{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#5ab0a0;margin-bottom:5px}
+  .notes ul{padding-left:14px}.notes li{margin-bottom:3px}
+  .dn{margin-top:8px;padding-top:8px;border-top:1px solid #1e1e1a}
+  .dn h3{color:#e09060!important}
+</style>
+</head>
+<body>
+<header>
+  <h1>Shed → Office / Studio</h1>
+  <span class="badge b1">OPEN PLAN</span>
+  <span class="badge b2">SIM RIG</span>
+  <p>5725 × 2765mm · ~16.5 m²</p>
+</header>
+<div class="main">
+  <div class="sidebar">
+    <div>
+      <h2>Mode</h2>
+      <div class="tog-row">
+        <button class="tog on-green" id="mOff" onclick="setMode('office')">🖥 OFFICE +<br>SIM RIG</button>
+        <button class="tog" id="mStu" onclick="setMode('studio')">🏠 STUDIO<br>APARTMENT</button>
+        <button class="tog" id="mEmpty" onclick="setMode('empty')">📐 FLOOR<br>PLAN ONLY</button>
+      </div>
+    </div>
+    <div>
+      <h2>Front Wall Entry Door</h2>
+      <div class="tog-row">
+        <button class="tog on-orange" id="dBath" onclick="setDoor('bath')">← BATHROOM<br>END</button>
+        <button class="tog" id="dPatio" onclick="setDoor('patio')">PATIO<br>END →</button>
+      </div>
+      <p style="font-size:9px;color:#3a3a36;margin-top:4px;line-height:1.5">900mm sliding cavity · front (bottom) wall</p>
+    </div>
+    <div>
+      <h2>Kitchen Position</h2>
+      <button class="opt-btn active" onclick="setLayout(0)">A — Near Bathroom<span>Cheapest plumbing · shared bathroom wall</span></button>
+      <button class="opt-btn" onclick="setLayout(1)">B — Near Patio<span>Best ventilation · Image 7 vibes</span></button>
+      <button class="opt-btn" onclick="setLayout(2)">C — Mid Front Wall ★<span>Balanced · best for studio conversion</span></button>
+    </div>
+    <div>
+      <h2>Orientation</h2>
+      <div class="info ig">
+        <strong>LEFT:</strong> Bathroom wall<br>
+        &nbsp;· 700 solid / 710 cavity / 1355 solid<br>
+        <strong>RIGHT:</strong> Glass door → patio<br>
+        <strong>TOP:</strong> Back wall · 2 windows<br>
+        <strong>BOTTOM:</strong> Front wall · entry door
+      </div>
+    </div>
+    <div>
+      <h2>Key Dimensions</h2>
+      <table class="dims-table">
+        <tr><td>Room</td><td>5725×2765mm</td></tr>
+        <tr><td>Ceiling</td><td>2200mm</td></tr>
+        <tr><td>Stand desk</td><td>1600×750mm</td></tr>
+        <tr><td>Sim rig footprint</td><td>1500×1200mm</td></tr>
+        <tr><td>Sofa (closed)</td><td>2000×900mm</td></tr>
+        <tr><td>Sofa bed (open)</td><td>2000×1500mm</td></tr>
+        <tr><td>Kitchenette</td><td>1800–1900×600mm</td></tr>
+        <tr><td>Entry door</td><td>900mm cavity</td></tr>
+      </table>
+    </div>
+    <div>
+      <h2>Legend</h2>
+      <div class="legend-item"><div class="sw" style="background:#3a3830"></div>Structural wall</div>
+      <div class="legend-item"><div class="sw" style="background:#8dc4e8"></div>Windows (back wall)</div>
+      <div class="legend-item"><div class="sw" style="background:#4a9a7a"></div>Glass patio door</div>
+      <div class="legend-item"><div class="sw" style="background:#c85c2e"></div>Bathroom cavity door</div>
+      <div class="legend-item"><div class="sw" style="background:#e8a030;outline:2px solid #e8a030"></div>Entry door (front wall)</div>
+      <div class="legend-item"><div class="sw" style="background:#e8d090"></div>Kitchenette bench</div>
+      <div class="legend-item"><div class="sw" style="background:#6a9a8a"></div>Standing desk</div>
+      <div class="legend-item"><div class="sw" style="background:#a08060"></div>Shelf tower / drawers / wardrobe</div>
+      <div class="legend-item"><div class="sw" style="background:rgba(55,55,75,0.6)"></div>Sim racing rig (1500×1200)</div>
+      <div class="legend-item"><div class="sw" style="background:rgba(115,115,160,0.7)"></div>Sofa bed (closed · 2000×900)</div>
+      <div class="legend-item"><div class="sw" style="background:#8ab0d0"></div>Sofa bed open as bed (2000×1500)</div>
+      <div class="legend-item"><div class="sw" style="background:rgba(170,145,90,0.5)"></div>Coffee / dining table</div>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <div class="ctitle" id="ctitle">OFFICE + SIM RIG · OPTION A · DOOR: BATHROOM END</div>
+    <canvas id="fp" width="820" height="460"></canvas>
+    <div class="notes" id="notes"></div>
+  </div>
+</div>
+
+<script>
+// All room coords in mm. (0,0)=top-left corner of room (including walls).
+// X→right: 0=bathroom end, 5725=patio end
+// Y↓down:  0=back wall (windows), 2765=front wall
+// Wall thickness W=80mm. Interior: x=80..5645, y=80..2685
+
+const CV=document.getElementById('fp');
+const ctx=CV.getContext('2d');
+const CW=CV.width,CH=CV.height;
+const RW=5725,RH=2765,W=80;
+
+// Canvas drawing area with margins
+const MX=54,MY=66,MR=36,MB=58;
+const DW=CW-MX-MR,DH=CH-MY-MB;
+const S=Math.min(DW/RW,DH/RH);
+const OX=MX+(DW-RW*S)/2,OY=MY;
+
+function px(x){return OX+x*S}
+function py(y){return OY+y*S}
+function pw(mm){return mm*S}
+
+let mode='office',layout=0,door='bath';
+
+// ── PRIMITIVES ────────────────────────────────────────────
+
+function clr(){ctx.clearRect(0,0,CW,CH)}
+
+function grid(){
+  ctx.save();ctx.strokeStyle='rgba(0,0,0,0.055)';ctx.lineWidth=0.5;
+  for(let x=0;x<=RW;x+=500){ctx.beginPath();ctx.moveTo(px(x),py(0));ctx.lineTo(px(x),py(RH));ctx.stroke()}
+  for(let y=0;y<=RH;y+=500){ctx.beginPath();ctx.moveTo(px(0),py(y));ctx.lineTo(px(RW),py(y));ctx.stroke()}
+  ctx.restore();
+}
+
+function fr(x,y,w,h,fill,stroke,lw){
+  ctx.fillStyle=fill;ctx.fillRect(px(x),py(y),pw(w),pw(h));
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw||0.8;ctx.strokeRect(px(x),py(y),pw(w),pw(h))}
+}
+
+function bx(x,y,w,h,fill,label,rad){
+  const fx=px(x),fy=py(y),fw=pw(w),fh=pw(h),rr=rad||0;
+  ctx.fillStyle=fill;
+  if(rr){ctx.beginPath();ctx.roundRect(fx,fy,fw,fh,rr);ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.2)';ctx.lineWidth=0.8;
+    ctx.beginPath();ctx.roundRect(fx,fy,fw,fh,rr);ctx.stroke();
+  }else{ctx.fillRect(fx,fy,fw,fh);ctx.strokeStyle='rgba(0,0,0,0.2)';ctx.lineWidth=0.8;ctx.strokeRect(fx,fy,fw,fh)}
+  if(label){
+    ctx.fillStyle='rgba(0,0,0,0.52)';
+    const fs=Math.min(8.5,Math.max(6,pw(78)));
+    ctx.font=`600 ${fs}px DM Sans`;ctx.textAlign='center';ctx.textBaseline='middle';
+    const lines=label.split('\n'),lh=Math.max(8,pw(105));
+    lines.forEach((l,i)=>ctx.fillText(l,fx+fw/2,fy+fh/2+(i-(lines.length-1)/2)*lh));
+  }
+}
+
+function dimTxt(txt,x,y,col){
+  ctx.fillStyle=col||'rgba(60,120,90,0.7)';ctx.font='6.5px Space Mono';
+  ctx.textAlign='center';ctx.textBaseline='bottom';
+  ctx.fillText(txt,px(x),py(y));
+}
+
+// ── KITCHENETTE ───────────────────────────────────────────
+
+function kitchen(xMM,wMM){
+  const yMM=RH-W-600;
+  bx(xMM,yMM,wMM,600,'#e8d090',null,2);
+  fr(xMM,yMM,wMM,50,'#d4b870');
+  fr(xMM+15,yMM+60,Math.round(wMM*0.38),490,'#2a2824','rgba(0,0,0,0.22)',0.5);
+  fr(xMM+Math.round(wMM*0.42),yMM+60,Math.round(wMM*0.18),490,'#2a2824','rgba(0,0,0,0.22)',0.5);
+  // sink
+  const sx=xMM+Math.round(wMM*0.07);
+  fr(sx,yMM+88,315,235,'#b8ccd0','#90aab0',0.7);
+  ctx.fillStyle='#80a0a8';ctx.beginPath();ctx.arc(px(sx+157),py(yMM+205),pw(40),0,Math.PI*2);ctx.fill();
+  // hob
+  const hx=xMM+Math.round(wMM*0.44),hy=yMM+86;
+  fr(hx,hy,365,258,'#383636');
+  [[hx+80,hy+106,58],[hx+268,hy+185,52]].forEach(([bx2,by,br])=>{
+    ctx.fillStyle='#282626';ctx.beginPath();ctx.arc(px(bx2),py(by),pw(br),0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#464444';ctx.beginPath();ctx.arc(px(bx2),py(by),pw(br)*0.42,0,Math.PI*2);ctx.fill();
+  });
+  // fridge
+  const frx=xMM+Math.round(wMM*0.83);
+  fr(frx,yMM+60,Math.min(195,Math.round(wMM*0.16)),445,'#1c1c1a','#333',0.7);
+  ctx.fillStyle='rgba(0,0,0,0.5)';ctx.font=`bold ${Math.min(8,pw(75))}px DM Sans`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('KITCHENETTE',px(xMM+wMM/2),py(yMM+530));
+  dimTxt(`← ${wMM}mm →`,xMM+wMM/2,yMM-2,'rgba(170,130,30,0.7)');
+}
+
+// ── STANDING DESK ─────────────────────────────────────────
+// xMM,yMM = top-left of desk. Total zone ~2020×1500mm
+
+function standingDesk(xMM,yMM){
+  // Desk 1600×750
+  bx(xMM,yMM,1600,750,'#6a9a8a',null,3);
+  fr(xMM,yMM,1600,18,'#3a6b5c');
+  // Shelf tower 380×750 to the right
+  bx(xMM+1620,yMM,380,750,'#a08060',null,2);
+  fr(xMM+1620,yMM,380,22,'#7a6040');
+  [195,390,560].forEach(dy=>fr(xMM+1622,yMM+dy,376,14,'#8a6848'));
+  // Drawer pedestal 420×540 below desk right
+  bx(xMM+1140,yMM+760,420,540,'#a08060',null,2);
+  [165,355].forEach(dy=>fr(xMM+1142,yMM+760+dy,416,14,'#8a6848'));
+  // Chair 680×660
+  bx(xMM+340,yMM+770,680,660,'rgba(70,70,70,0.28)',null,340);
+  // Labels
+  ctx.fillStyle='rgba(0,0,0,0.5)';ctx.font=`bold ${Math.min(8,pw(72))}px DM Sans`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('STAND DESK 1600',px(xMM+800),py(yMM+380));
+  ctx.fillText('SHELF',px(xMM+1810),py(yMM+375));
+  ctx.fillText('DRAWERS',px(xMM+1350),py(yMM+1030));
+  dimTxt('← 2000mm office zone →',xMM+1000,yMM-2,'rgba(30,100,70,0.7)');
+}
+
+// ── SIM RIG ───────────────────────────────────────────────
+// xMM,yMM = top-left. Footprint 1500×1200.
+
+function simRig(xMM,yMM){
+  bx(xMM,yMM,1500,1200,'rgba(52,52,72,0.4)',null,4);
+  // Seat
+  bx(xMM+440,yMM+390,620,670,'rgba(32,32,52,0.65)',null,6);
+  // Pedal box
+  bx(xMM+490,yMM+78,520,185,'#34344a',null,3);
+  // Wheel
+  bx(xMM+560,yMM+295,380,72,'#26263a',null,5);
+  // Triple screens (against back wall at yMM)
+  [-255,0,255].forEach(dx=>bx(xMM+490+dx,yMM,230,40,'#12121e',null,2));
+  ctx.fillStyle='rgba(90,130,220,0.1)';ctx.fillRect(px(xMM+80),py(yMM),pw(1340),pw(40));
+  ctx.fillStyle='rgba(0,0,0,0.52)';ctx.font=`bold ${Math.min(8,pw(72))}px DM Sans`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('SIM RIG',px(xMM+750),py(yMM+580));
+  ctx.fillText('1500×1200mm',px(xMM+750),py(yMM+740));
+  dimTxt('← 1500mm →',xMM+750,yMM-2,'rgba(50,50,110,0.7)');
+}
+
+// ── SOFA BED ──────────────────────────────────────────────
+// open=false → sofa 2000×900 (with ghost of fold-out)
+// open=true  → bed deployed 2000×1500
+
+function sofaBed(xMM,yMM,open){
+  if(open){
+    bx(xMM,yMM,2000,1500,'#8ab0d0',null,5);
+    fr(xMM,yMM,2000,18,'#5a90b8');
+    bx(xMM+140,yMM+28,440,185,'rgba(215,220,240,0.65)',null,4);
+    bx(xMM+1420,yMM+28,440,185,'rgba(215,220,240,0.65)',null,4);
+    ctx.fillStyle='rgba(0,0,0,0.45)';ctx.font=`bold ${Math.min(8,pw(72))}px DM Sans`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('SOFA BED OPEN',px(xMM+1000),py(yMM+780));
+    ctx.fillText('2000×1500mm',px(xMM+1000),py(yMM+940));
+  }else{
+    bx(xMM,yMM,2000,900,'rgba(110,110,158,0.55)',null,5);
+    fr(xMM,yMM,2000,108,'rgba(92,92,138,0.6)');
+    [0,648,1298].forEach(cx=>bx(xMM+cx+12,yMM+122,620,642,'rgba(105,105,150,0.4)',null,4));
+    // Ghost fold-out
+    ctx.save();ctx.strokeStyle='rgba(85,125,175,0.38)';ctx.lineWidth=1;ctx.setLineDash([5,4]);
+    ctx.strokeRect(px(xMM),py(yMM+900),pw(2000),pw(600));
+    ctx.fillStyle='rgba(85,125,175,0.1)';ctx.fillRect(px(xMM),py(yMM+900),pw(2000),pw(600));
+    ctx.restore();
+    ctx.fillStyle='rgba(75,105,158,0.5)';ctx.font='6.5px Space Mono';ctx.textAlign='center';
+    ctx.fillText('bed opens →1500D',px(xMM+1000),py(yMM+1210));
+    ctx.fillStyle='rgba(0,0,0,0.48)';ctx.font=`bold ${Math.min(8,pw(72))}px DM Sans`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('SOFA BED',px(xMM+1000),py(yMM+460));
+    ctx.fillText('2000×900mm',px(xMM+1000),py(yMM+620));
+  }
+  dimTxt('← 2000mm →',xMM+1000,yMM-2,'rgba(70,70,120,0.7)');
+}
+
+// ── COFFEE TABLE ──────────────────────────────────────────
+
+function coffeeTable(xMM,yMM){
+  bx(xMM,yMM,900,500,'rgba(165,140,85,0.45)',null,4);
+  ctx.fillStyle='rgba(0,0,0,0.38)';ctx.font='6.5px DM Sans';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('COFFEE TABLE',px(xMM+450),py(yMM+250));
+}
+
+// ── DINING TABLE ──────────────────────────────────────────
+
+function diningTable(xMM,yMM){
+  bx(xMM,yMM,900,900,'rgba(165,140,85,0.45)',null,4);
+  bx(xMM+180,yMM-175,540,165,'rgba(140,115,65,0.38)',null,3);
+  bx(xMM+180,yMM+910,540,165,'rgba(140,115,65,0.38)',null,3);
+  ctx.fillStyle='rgba(0,0,0,0.42)';ctx.font='6.5px DM Sans';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('DINING 900×900',px(xMM+450),py(yMM+450));
+}
+
+// ── WARDROBE ──────────────────────────────────────────────
+
+function wardrobe(xMM,yMM){
+  bx(xMM,yMM,600,600,'#a08060',null,2);
+  fr(xMM+8,yMM+8,282,584,'#8a6840','rgba(0,0,0,0.18)',0.5);
+  fr(xMM+310,yMM+8,282,584,'#8a6840','rgba(0,0,0,0.18)',0.5);
+  ctx.fillStyle='rgba(0,0,0,0.48)';ctx.font='6.5px DM Sans';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('WARDROBE',px(xMM+300),py(yMM+300));
+}
+
+// ── TV CONSOLE (front wall, studio mode) ──────────────────
+
+function tvConsole(xMM,yMM){
+  bx(xMM,yMM,1200,360,'#1e1e28',null,3);
+  ctx.fillStyle='rgba(175,185,225,0.15)';ctx.fillRect(px(xMM+18),py(yMM+18),pw(1164),pw(270));
+  ctx.fillStyle='rgba(135,145,205,0.6)';ctx.font=`bold ${Math.min(8,pw(78))}px DM Sans`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('TV / MEDIA CONSOLE',px(xMM+600),py(yMM+185));
+}
+
+// ── SHELL (walls + doors — drawn LAST) ────────────────────
+
+function shell(){
+  const wc='#3a3830';
+  fr(0,0,RW,W,wc);fr(0,RH-W,RW,W,wc);
+  fr(0,0,W,RH,wc);fr(RW-W,0,W,RH,wc);
+
+  // Bathroom panel outside left
+  ctx.fillStyle='#beb6a2';ctx.fillRect(px(0)-26,py(W),24,pw(RH-W*2));
+  ctx.save();ctx.fillStyle='#6a6456';ctx.font='bold 7px DM Sans';ctx.textAlign='center';
+  ctx.translate(px(0)-14,py(RH/2));ctx.rotate(-Math.PI/2);ctx.fillText('BATHROOM',0,0);ctx.restore();
+
+  // Left wall solids + cavity
+  fr(0,W,W,700-W,wc);
+  fr(0,700,W,710,'#ede9e0');
+  ctx.strokeStyle='#c85c2e';ctx.lineWidth=2;ctx.strokeRect(px(0)-1,py(700),pw(W)+2,pw(710));
+  ctx.strokeStyle='#c85c2e';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(px(W+5),py(1055));ctx.lineTo(px(W+710),py(1055));ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#c85c2e';ctx.font='bold 6.5px Space Mono';ctx.textAlign='left';
+  ctx.fillText('710 CAVITY',px(W+5),py(700)-3);
+  fr(0,1410,W,1355,wc);
+  ctx.fillStyle='#777';ctx.font='7px Space Mono';ctx.textAlign='right';
+  ctx.fillText('700',px(0)-29,py(350)+3);
+  ctx.fillText('710',px(0)-29,py(1055)+3);
+  ctx.fillText('1355',px(0)-29,py(2088)+3);
+
+  // Right: patio glass door
+  fr(RW-W,450,W,1860,'rgba(74,180,140,0.22)');
+  ctx.strokeStyle='#4a9a7a';ctx.lineWidth=2.5;ctx.strokeRect(px(RW-W),py(450),pw(W),pw(1860));
+  ctx.strokeStyle='#4a9a7a';ctx.lineWidth=1;ctx.setLineDash([3,2]);
+  ctx.beginPath();ctx.moveTo(px(RW-W),py(1380));ctx.lineTo(px(RW),py(1380));ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.save();ctx.fillStyle='#3a8a6a';ctx.font='bold 7px Space Mono';ctx.textAlign='center';
+  ctx.translate(px(RW)+20,py(RH/2));ctx.rotate(Math.PI/2);ctx.fillText('GLASS DOOR → PATIO',0,0);ctx.restore();
+
+  // Top: windows
+  [{x:600,w:1400},{x:3100,w:1400}].forEach(({x,w})=>{
+    fr(x,0,w,W,'#8dc4e8');
+    ctx.strokeStyle='#4a7fa8';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(px(x+w/2),py(0));ctx.lineTo(px(x+w/2),py(W));ctx.stroke();
+    ctx.fillStyle='#4a7fa8';ctx.font='7px Space Mono';ctx.textAlign='center';ctx.fillText('WIN',px(x+w/2),py(0)-4);
+  });
+
+  // Bottom: entry door
+  const eX=door==='bath'?300:RW-300-900;
+  fr(eX,RH-W,900,W,'rgba(232,160,48,0.3)');
+  ctx.strokeStyle='#e8a030';ctx.lineWidth=2.5;ctx.strokeRect(px(eX),py(RH-W)-1,pw(900),pw(W)+2);
+  ctx.strokeStyle='#e8a030';ctx.lineWidth=1.2;ctx.setLineDash([4,3]);
+  if(door==='bath'){ctx.beginPath();ctx.moveTo(px(eX),py(RH-W/2));ctx.lineTo(px(eX-900),py(RH-W/2));ctx.stroke();}
+  else{ctx.beginPath();ctx.moveTo(px(eX+900),py(RH-W/2));ctx.lineTo(px(eX+1800),py(RH-W/2));ctx.stroke();}
+  ctx.setLineDash([]);
+  ctx.fillStyle='#e8a030';ctx.font='bold 7px Space Mono';ctx.textAlign='center';
+  ctx.fillText('ENTRY 900mm',px(eX+450),py(RH)+13);
+
+  // Axis labels
+  ctx.fillStyle='#666';ctx.fillRect(px(0),py(RH)+28,pw(1000),2);
+  ctx.fillStyle='#555';ctx.font='7px Space Mono';ctx.textAlign='left';ctx.fillText('1m',px(1000)+4,py(RH)+36);
+  ctx.textAlign='center';ctx.fillText('← 5725mm →',px(RW/2),py(0)-28);
+  ctx.fillStyle='#444';ctx.font='7px DM Sans';
+  ctx.fillText('BACK WALL  (2× windows)',px(RW/2),py(0)-16);
+  ctx.fillText('FRONT WALL',px(RW/2),py(RH)+8);
+  ctx.fillStyle='#383836';
+  ctx.fillText('← BATHROOM END                                                  PATIO END →',px(RW/2),py(RH)+42);
+  ctx.save();ctx.fillStyle='#444';ctx.font='7px Space Mono';ctx.textAlign='center';
+  ctx.translate(px(0)-38,py(RH/2));ctx.rotate(-Math.PI/2);ctx.fillText('← 2765mm →',0,0);ctx.restore();
+}
+
+// ── LAYOUTS ───────────────────────────────────────────────
+
+function drawA(m){
+  if(m==='empty') return;
+  kitchen(80,1900);
+  if(m==='office'){
+    standingDesk(620,W);
+    simRig(3100,W);
+    sofaBed(3000,RH-W-900,false);
+    coffeeTable(3200,RH-W-1480);
+    // TV on back wall between zones
+    bx(2640,W,310,55,'#18181e',null,2);
+    ctx.fillStyle='rgba(135,145,205,0.5)';ctx.font='6.5px Space Mono';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('TV',px(2795),py(W+27));
+  }else{
+    sofaBed(3000,RH-W-1500,true);
+    wardrobe(W+100,W);
+    diningTable(W+100,RH-W-1080);
+    tvConsole(2450,RH-W-380);
+  }
+}
+
+function drawB(m){
+  if(m==='empty') return;
+  kitchen(3745,1900);
+  if(m==='office'){
+    simRig(W+100,W);
+    standingDesk(3200,W);
+    sofaBed(W+100,RH-W-900,false);
+    coffeeTable(W+300,RH-W-1480);
+    bx(1870,W,310,55,'#18181e',null,2);
+    ctx.fillStyle='rgba(135,145,205,0.5)';ctx.font='6.5px Space Mono';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('TV',px(2025),py(W+27));
+  }else{
+    sofaBed(W+100,RH-W-1500,true);
+    wardrobe(3545,W);
+    diningTable(3545,RH-W-1080);
+    tvConsole(1450,RH-W-380);
+  }
+}
+
+function drawC(m){
+  if(m==='empty') return;
+  kitchen(1963,1800);
+  if(m==='office'){
+    standingDesk(W+100,W);
+    simRig(4050,W);
+    sofaBed(3480,RH-W-900,false);
+    coffeeTable(3580,RH-W-1480);
+    bx(2000,W,310,55,'#18181e',null,2);
+    ctx.fillStyle='rgba(135,145,205,0.5)';ctx.font='6.5px Space Mono';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('TV',px(2155),py(W+27));
+  }else{
+    sofaBed(3480,RH-W-1500,true);
+    wardrobe(W+100,W);
+    diningTable(W+100,RH-W-1080);
+    tvConsole(1900,RH-W-380);
+  }
+}
+
+// ── RENDER ────────────────────────────────────────────────
+
+function render(){
+  clr();
+  ctx.fillStyle='#ede9e0';ctx.fillRect(px(0),py(0),pw(RW),pw(RH));
+  grid();
+  [drawA,drawB,drawC][layout](mode);
+  shell();
+}
+
+// ── NOTES + TITLE ─────────────────────────────────────────
+
+const KN={
+  office:[
+    `<h3>A · Office + Sim · Kitchen Near Bathroom</h3><ul>
+    <li><strong>Standing desk</strong> (1600mm) under left window — monitor ledge, 380mm shelf tower right, drawer pedestal below. ~1000mm chair clearance.</li>
+    <li><strong>Sim rig</strong> (1500×1200mm) under right window — triple screens against back wall. ~400mm side clearance each side.</li>
+    <li><strong>Sofa bed</strong> (2000×900mm sofa / 1500mm deep open) — dashed ghost shows fold-out zone toward front wall. Coffee table slides aside.</li>
+    <li>Kitchen at bathroom end: cheapest plumbing (shared wall), ~$800–1500 cheaper than Option B.</li>
+    </ul>`,
+    `<h3>B · Office + Sim · Kitchen Near Patio</h3><ul>
+    <li><strong>Sim rig</strong> under left window at quiet bathroom end — away from kitchen steam, full cockpit clearance.</li>
+    <li><strong>Standing desk</strong> under right window beside kitchen — easy coffee grab mid-call.</li>
+    <li><strong>Sofa bed</strong> in left-centre — separates sim from kitchen. Glass door provides sofa ventilation.</li>
+    <li>Kitchen at patio: best extraction, matches Image 7 inspo, ~$800–1500 more plumbing.</li>
+    </ul>`,
+    `<h3>C · Office + Sim · Kitchen Mid Wall ★</h3><ul>
+    <li><strong>Standing desk</strong> at quiet bathroom end (left window) — best focus zone.</li>
+    <li><strong>Sim rig</strong> at patio end (right window) — ventilate via glass door during long sessions. Step outside to cool down.</li>
+    <li><strong>Sofa bed</strong> between kitchen and sim — kitchen acts as visual anchor for the whole room.</li>
+    <li>Best zone separation. Balanced plumbing (~2.5m). Recommended.</li>
+    </ul>`
+  ],
+  studio:[
+    `<h3>A · Studio · Kitchen Near Bathroom</h3><ul>
+    <li>Sofa bed opens toward patio — feet face glass door, great airflow in QLD summers.</li>
+    <li>Wardrobe + dining at bathroom end alongside kitchen — compact wet + utility zone.</li>
+    <li>TV console on front wall faces the bed/sofa from across the room.</li>
+    </ul>`,
+    `<h3>B · Studio · Kitchen Near Patio</h3><ul>
+    <li>Sofa bed at quiet bathroom end — close to bathroom for night access.</li>
+    <li>Kitchen at patio entry — tenant walks in through glass door into kitchen/dining. Most appealing layout for rental.</li>
+    </ul>`,
+    `<h3>C · Studio · Kitchen Mid Wall ★</h3><ul>
+    <li>Sofa bed at patio end — opens toward glass door, indoor-outdoor feel.</li>
+    <li>Wardrobe + dining at quiet bathroom end. Kitchen centred as visual anchor.</li>
+    <li>Classic granny flat layout — every zone is self-evident. Easiest to rent.</li>
+    </ul>`
+  ]
+};
+const DN={
+  bath:`<div class="dn"><h3>🚪 Door: Bathroom End</h3><ul>
+    <li>Entry and bathroom at same end — convenient for studio tenants at night</li>
+    <li>Room flows: enter → living/work → patio at far end</li>
+    <li>With Kitchen A: door + kitchen both at left — keep 900mm+ clearance between door and bench start</li>
+    </ul></div>`,
+  patio:`<div class="dn"><h3>🚪 Door: Patio End</h3><ul>
+    <li>Entry alongside patio glass door — double opening, great airlock/mudroom feel</li>
+    <li>Work/sim zone at bathroom end becomes very private and quiet</li>
+    <li>With Kitchen B: door + kitchen + glass door all at right end — busy but can feel like a terrace entry</li>
+    </ul></div>`
+};
+
+function updateNotes(){
+  if(mode==='empty'){
+    document.getElementById('notes').innerHTML=`<h3>Floor Plan · Empty</h3><ul>
+    <li>Showing bare floor plan with doors and windows only — no furniture or kitchen</li>
+    <li>Entry door position still toggleable below. Kitchen layout toggle has no effect in this mode.</li>
+    <li>${door==='bath'?'Entry door at <strong>bathroom end</strong> (left) of front wall':'Entry door at <strong>patio end</strong> (right) of front wall'}</li>
+    </ul>`+DN[door];
+    return;
+  }
+  document.getElementById('notes').innerHTML=KN[mode][layout]+DN[door];
+}
+function updateTitle(){
+  const m=mode==='office'?'OFFICE + SIM RIG':mode==='studio'?'STUDIO APARTMENT':'FLOOR PLAN ONLY';
+  const l=['A · KITCHEN NEAR BATHROOM','B · KITCHEN NEAR PATIO','C · KITCHEN MID WALL ★'][layout];
+  const d=door==='bath'?'DOOR: BATHROOM END':'DOOR: PATIO END';
+  document.getElementById('ctitle').textContent=mode==='empty'?`EMPTY FLOOR PLAN · ${d}`:`${m} · ${l} · ${d}`;
+}
+
+function setLayout(i){
+  layout=i;
+  document.querySelectorAll('.opt-btn').forEach((b,j)=>b.classList.toggle('active',i===j));
+  updateTitle();updateNotes();render();
+}
+function setMode(m){
+  mode=m;
+  document.getElementById('mOff').className='tog'+(m==='office'?' on-green':'');
+  document.getElementById('mStu').className='tog'+(m==='studio'?' on-green':'');
+  document.getElementById('mEmpty').className='tog'+(m==='empty'?' on-green':'');
+  updateTitle();updateNotes();render();
+}
+function setDoor(d){
+  door=d;
+  document.getElementById('dBath').className='tog'+(d==='bath'?' on-orange':'');
+  document.getElementById('dPatio').className='tog'+(d==='patio'?' on-orange':'');
+  updateTitle();updateNotes();render();
+}
+
+setLayout(0);
+</script>
+</body>
+</html>
